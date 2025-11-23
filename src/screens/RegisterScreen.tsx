@@ -299,6 +299,9 @@ export function RegisterScreen({ onSwitchToLogin }: RegisterScreenProps) {
               onChange={handleDateChange}
               maximumDate={new Date()}
               minimumDate={new Date(1900, 0, 1)}
+              textColor="#111827"
+              accentColor="#10B981"
+              themeVariant="light"
             />
           )}
 
