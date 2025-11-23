@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../contexts/AuthContextRN";
 import { Feather } from "@expo/vector-icons";
 import * as Yup from "yup";
@@ -47,6 +48,44 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
   const [apiError, setApiError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    loadSavedCredentials();
+  }, []);
+
+  const loadSavedCredentials = async () => {
+    try {
+      const savedEmail = await AsyncStorage.getItem("savedEmail");
+      const savedPassword = await AsyncStorage.getItem("savedPassword");
+      const savedRememberMe = await AsyncStorage.getItem("rememberMe");
+
+      if (savedRememberMe === "true" && savedEmail && savedPassword) {
+        setFormData({ email: savedEmail, password: savedPassword });
+        setRememberMe(true);
+      }
+    } catch (error) {
+      console.error("Failed to load saved credentials:", error);
+    }
+  };
+
+  const saveCredentials = async () => {
+    try {
+      if (rememberMe) {
+        await AsyncStorage.setItem("savedEmail", formData.email);
+        await AsyncStorage.setItem("savedPassword", formData.password);
+        await AsyncStorage.setItem("rememberMe", "true");
+      } else {
+        await AsyncStorage.multiRemove([
+          "savedEmail",
+          "savedPassword",
+          "rememberMe",
+        ]);
+      }
+    } catch (error) {
+      console.error("Failed to save credentials:", error);
+    }
+  };
 
   const handleSubmit = async () => {
     setErrors({});
@@ -60,6 +99,8 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
 
       if (!result.success) {
         setApiError(result.error || "Login failed");
+      } else {
+        await saveCredentials();
       }
     } catch (error) {
       if (error instanceof Yup.ValidationError) {
@@ -164,6 +205,18 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
               <Text style={styles.errorMsg}>{errors.password}</Text>
             )}
           </View>
+
+          <TouchableOpacity
+            style={styles.rememberMeContainer}
+            onPress={() => setRememberMe(!rememberMe)}
+          >
+            <View
+              style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
+            >
+              {rememberMe && <Feather name="check" size={16} color="#FFFFFF" />}
+            </View>
+            <Text style={styles.rememberMeText}>Remember me</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.button, isLoading && styles.buttonDisabled]}
@@ -300,7 +353,30 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
+  },
+  rememberMeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: "#D1D5DB",
+    marginRight: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: "#2563EB",
+    borderColor: "#2563EB",
+  },
+  rememberMeText: {
+    fontSize: 14,
+    color: "#4B5563",
   },
   buttonIcon: {
     marginRight: 8,

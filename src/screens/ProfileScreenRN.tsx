@@ -389,17 +389,17 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 12,
-    color: "#6B7280",
+    color: "#FFFFFF",
     marginBottom: 8,
   },
   metricValue: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#2563EB",
+    color: "#FFFFFF",
     marginBottom: 4,
   },
   metricStatus: {
     fontSize: 10,
-    color: "#10B981",
+    color: "#FFFFFF",
   },
 });

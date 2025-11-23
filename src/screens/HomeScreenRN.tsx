@@ -872,18 +872,22 @@ const styles = StyleSheet.create({
   bmiResultValue: {
     fontSize: 28,
     fontWeight: "bold",
+    color: "#FFFFFF",
   },
   bmiResultCategory: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#00000000",
   },
   bmiAdviceContainer: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
+    borderTopColor: "#00000000",
   },
   bmiAdvice: {
     fontSize: 12,
     lineHeight: 18,
+    color: "#00000000",
   },
 });

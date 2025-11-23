@@ -6,6 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert } from "react-native";
 
 interface User {
   id: string;
@@ -114,6 +115,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const checkWaterIntakeReminder = async () => {
+    try {
+      const today = new Date().toDateString();
+      const waterHistory = await AsyncStorage.getItem("waterHistory");
+
+      if (waterHistory) {
+        const history = JSON.parse(waterHistory);
+        const todayData = history.find((item: any) => item.date === today);
+        const todayAmount = todayData ? todayData.amount : 0;
+        const goal = 2000; // 2L goal
+
+        if (todayAmount < goal) {
+          const remaining = goal - todayAmount;
+          setTimeout(() => {
+            Alert.alert(
+              "💧 Stay Hydrated!",
+              `You've consumed ${todayAmount}ml of water today. You need ${remaining}ml more to reach your 2L daily goal. Remember to drink water regularly!`,
+              [
+                { text: "Remind Me Later", style: "cancel" },
+                { text: "OK", style: "default" },
+              ]
+            );
+          }, 1500); // Show after 1.5 seconds
+        }
+      } else {
+        // No water logged yet
+        setTimeout(() => {
+          Alert.alert(
+            "💧 Water Intake Reminder",
+            "Don't forget to track your water intake today! Staying hydrated is essential for your wellness journey. Daily goal: 2L",
+            [
+              { text: "Remind Me Later", style: "cancel" },
+              { text: "OK", style: "default" },
+            ]
+          );
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error checking water reminder:", error);
+    }
+  };
+
   const login = async (
     email: string,
     password: string
@@ -140,6 +183,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         "currentUser",
         JSON.stringify(userWithoutPassword)
       );
+
+      // Show water intake reminder after successful login
+      checkWaterIntakeReminder();
 
       return { success: true };
     } catch (error) {

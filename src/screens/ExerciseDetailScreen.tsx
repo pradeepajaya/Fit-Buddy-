@@ -84,10 +84,57 @@ export function ExerciseDetailScreen() {
     }
   };
 
+  const hasGif = (exerciseName: string) => {
+    // No GIFs for now - all will be static images
+    return false;
+  };
+
   const getExerciseGif = (exerciseName: string) => {
-    // Generate exercise GIF URL from exercise name
-    const searchName = exerciseName.toLowerCase().replace(/\s+/g, "-");
-    return `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${searchName}/images/0.jpg`;
+    // Map exercise names to local images in src/images/exercises folder
+    const normalizedName = exerciseName.toLowerCase().trim().replace(/-/g, " ");
+
+    const imageMap: { [key: string]: any } = {
+      // Chest Exercises
+      "push ups": require("../images/exercises/push ups.jpg"),
+      "bench press": require("../images/exercises/bench-press.png"),
+      "dumbbell flyes": require("../images/exercises/dumbbell-fly.jpg"),
+
+      // Back Exercises
+      "pull ups": require("../images/exercises/Pull-ups.jpg"),
+      "bent over rows": require("../images/exercises/bent-over-rows.png"),
+      deadlift: require("../images/exercises/deadlift.jpg"),
+
+      // Leg Exercises
+      squats: require("../images/exercises/squats.jpg"),
+      lunges: require("../images/exercises/lunges.jpg"),
+      "leg press": require("../images/exercises/leg press.jpg"),
+
+      // Shoulder Exercises
+      "shoulder press": require("../images/exercises/shoulder press.png"),
+      "lateral raises": require("../images/exercises/lateral raises.jpg"),
+
+      // Arm Exercises
+      "bicep curls": require("../images/exercises/bicep curls.jpg"),
+      "tricep dips": require("../images/exercises/tricep dips.jpg"),
+
+      // Core Exercises
+      plank: require("../images/exercises/plank.jpg"),
+      crunches: require("../images/exercises/crunches.jpg"),
+      "russian twists": require("../images/exercises/russian twist.jpg"),
+
+      // Cardio Exercises
+      "jump rope": require("../images/exercises/jumping rope.jpg"),
+      burpees: require("../images/exercises/burpees.jpg"),
+
+      // Flexibility/Mobility
+      "yoga flow": require("../images/exercises/yoga flow.png"),
+      "stretching routine": require("../images/exercises/stretching routine.jpg"),
+    };
+
+    // Return the matched image or a default placeholder
+    return (
+      imageMap[normalizedName] || require("../images/exercises/push ups.jpg")
+    );
   };
 
   return (
@@ -132,17 +179,19 @@ export function ExerciseDetailScreen() {
         {/* Exercise GIF/Image */}
         <View style={[styles.gifContainer, { backgroundColor: colors.card }]}>
           <Image
-            source={{ uri: getExerciseGif(exercise.name) }}
+            source={getExerciseGif(exercise.name)}
             style={styles.exerciseGif}
             resizeMode="cover"
           />
-          <View style={styles.gifOverlay}>
-            <Feather
-              name="play-circle"
-              size={48}
-              color="rgba(255,255,255,0.9)"
-            />
-          </View>
+          {hasGif(exercise.name) && (
+            <View style={styles.gifOverlay}>
+              <Feather
+                name="play-circle"
+                size={48}
+                color="rgba(255,255,255,0.9)"
+              />
+            </View>
+          )}
         </View>
 
         {/* Exercise Timer */}

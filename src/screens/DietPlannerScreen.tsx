@@ -8,6 +8,8 @@ import {
   TextInput,
   Alert,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -299,7 +301,8 @@ export function DietPlannerScreen() {
     setNewFoodProtein("");
     setNewFoodCarbs("");
     setNewFoodFats("");
-    Alert.alert("Success", `${newFood.name} added to your available foods!`);
+    setNewFoodCategory("breakfast");
+    Alert.alert("Success", `${newFood.name} added to ${newFood.category}!`);
   };
 
   const removeFromAvailableFoods = (foodId: string) => {
@@ -314,7 +317,7 @@ export function DietPlannerScreen() {
       const updated = [...selectedFoods, food];
       setSelectedFoods(updated);
       saveSelectedFoods(updated);
-      Alert.alert("Added", `${food.name} added to your diet plan!`);
+      Alert.alert("Added", `${food.name} added to ${food.category}!`);
     }
   };
 
@@ -608,7 +611,10 @@ export function DietPlannerScreen() {
         transparent={true}
         onRequestClose={() => setShowAvailableFoodsModal(false)}
       >
-        <View style={styles.modalContainer}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalContainer}
+        >
           <View
             style={[
               styles.availableFoodsModal,
@@ -672,222 +678,338 @@ export function DietPlannerScreen() {
               </View>
             </View>
 
-            {/* Add New Food Section */}
-            <View
-              style={[
-                styles.addFoodSection,
-                { backgroundColor: colors.surface || colors.background },
-              ]}
+            <ScrollView
+              style={styles.modalScrollView}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
             >
-              <View style={styles.addFoodHeader}>
-                <Feather name="plus-square" size={20} color={colors.primary} />
-                <Text style={[styles.addFoodTitle, { color: colors.text }]}>
-                  Add Custom Food
-                </Text>
-              </View>
-              <TextInput
+              {/* Add New Food Section */}
+              <View
                 style={[
-                  styles.foodInput,
-                  { color: colors.text, borderColor: colors.border },
+                  styles.addFoodSection,
+                  { backgroundColor: colors.surface || colors.background },
                 ]}
-                placeholder="Food name..."
-                placeholderTextColor={colors.textSecondary}
-                value={newFoodName}
-                onChangeText={setNewFoodName}
-              />
+              >
+                <View style={styles.addFoodHeader}>
+                  <Feather
+                    name="plus-square"
+                    size={20}
+                    color={colors.primary}
+                  />
+                  <Text style={[styles.addFoodTitle, { color: colors.text }]}>
+                    Create Custom Food
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.addFoodDescription,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Add your own custom foods to the list
+                </Text>
 
-              {/* Nutritional Info Inputs */}
-              <View style={styles.nutritionRow}>
-                <TextInput
-                  style={[
-                    styles.nutritionInput,
-                    { color: colors.text, borderColor: colors.border },
-                  ]}
-                  placeholder="Calories"
-                  placeholderTextColor={colors.textSecondary}
-                  value={newFoodCalories}
-                  onChangeText={setNewFoodCalories}
-                  keyboardType="numeric"
-                />
-                <TextInput
-                  style={[
-                    styles.nutritionInput,
-                    { color: colors.text, borderColor: colors.border },
-                  ]}
-                  placeholder="Protein (g)"
-                  placeholderTextColor={colors.textSecondary}
-                  value={newFoodProtein}
-                  onChangeText={setNewFoodProtein}
-                  keyboardType="numeric"
-                />
-              </View>
-              <View style={styles.nutritionRow}>
-                <TextInput
-                  style={[
-                    styles.nutritionInput,
-                    { color: colors.text, borderColor: colors.border },
-                  ]}
-                  placeholder="Carbs (g)"
-                  placeholderTextColor={colors.textSecondary}
-                  value={newFoodCarbs}
-                  onChangeText={setNewFoodCarbs}
-                  keyboardType="numeric"
-                />
-                <TextInput
-                  style={[
-                    styles.nutritionInput,
-                    { color: colors.text, borderColor: colors.border },
-                  ]}
-                  placeholder="Fats (g)"
-                  placeholderTextColor={colors.textSecondary}
-                  value={newFoodFats}
-                  onChangeText={setNewFoodFats}
-                  keyboardType="numeric"
-                />
-              </View>
-
-              <View style={styles.categoryPickerRow}>
-                {["breakfast", "lunch", "dinner"].map((cat) => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[
-                      styles.categoryPickerButton,
-                      { borderColor: colors.border },
-                      newFoodCategory === cat && {
-                        backgroundColor: colors.primary,
-                      },
-                    ]}
-                    onPress={() => setNewFoodCategory(cat)}
-                  >
-                    <Text
+                <View style={styles.customFoodForm}>
+                  <View style={styles.formGroup}>
+                    <Text style={[styles.formLabel, { color: colors.text }]}>
+                      Food Name
+                    </Text>
+                    <TextInput
                       style={[
-                        styles.categoryPickerText,
+                        styles.foodInput,
                         {
-                          color:
-                            newFoodCategory === cat ? "#FFFFFF" : colors.text,
+                          color: colors.text,
+                          borderColor: colors.border,
+                          backgroundColor: colors.background,
                         },
                       ]}
-                    >
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      placeholder="e.g., Protein Shake"
+                      placeholderTextColor={colors.textSecondary}
+                      value={newFoodName}
+                      onChangeText={setNewFoodName}
+                    />
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={[styles.formLabel, { color: colors.text }]}>
+                      Meal Type
+                    </Text>
+                    <View style={styles.categoryPickerRow}>
+                      {["breakfast", "lunch", "dinner"].map((cat) => (
+                        <TouchableOpacity
+                          key={cat}
+                          style={[
+                            styles.categoryPickerButton,
+                            { borderColor: colors.border },
+                            newFoodCategory === cat && {
+                              backgroundColor: colors.primary,
+                            },
+                          ]}
+                          onPress={() => setNewFoodCategory(cat)}
+                        >
+                          <Text
+                            style={[
+                              styles.categoryPickerText,
+                              {
+                                color:
+                                  newFoodCategory === cat
+                                    ? "#FFFFFF"
+                                    : colors.text,
+                              },
+                            ]}
+                          >
+                            {cat === "breakfast"
+                              ? "🌅"
+                              : cat === "lunch"
+                              ? "☀️"
+                              : "🌙"}{" "}
+                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={[styles.formLabel, { color: colors.text }]}>
+                      Nutritional Information
+                    </Text>
+                    <View style={styles.nutritionRow}>
+                      <View style={styles.nutritionInputWrapper}>
+                        <Text
+                          style={[
+                            styles.nutritionLabel,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          Calories
+                        </Text>
+                        <TextInput
+                          style={[
+                            styles.nutritionInput,
+                            {
+                              color: colors.text,
+                              borderColor: colors.border,
+                              backgroundColor: colors.background,
+                            },
+                          ]}
+                          placeholder="0"
+                          placeholderTextColor={colors.textSecondary}
+                          value={newFoodCalories}
+                          onChangeText={setNewFoodCalories}
+                          keyboardType="numeric"
+                          returnKeyType="done"
+                        />
+                      </View>
+                      <View style={styles.nutritionInputWrapper}>
+                        <Text
+                          style={[
+                            styles.nutritionLabel,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          Protein (g)
+                        </Text>
+                        <TextInput
+                          style={[
+                            styles.nutritionInput,
+                            {
+                              color: colors.text,
+                              borderColor: colors.border,
+                              backgroundColor: colors.background,
+                            },
+                          ]}
+                          placeholder="0"
+                          placeholderTextColor={colors.textSecondary}
+                          value={newFoodProtein}
+                          onChangeText={setNewFoodProtein}
+                          keyboardType="numeric"
+                          returnKeyType="done"
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.nutritionRow}>
+                      <View style={styles.nutritionInputWrapper}>
+                        <Text
+                          style={[
+                            styles.nutritionLabel,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          Carbs (g)
+                        </Text>
+                        <TextInput
+                          style={[
+                            styles.nutritionInput,
+                            {
+                              color: colors.text,
+                              borderColor: colors.border,
+                              backgroundColor: colors.background,
+                            },
+                          ]}
+                          placeholder="0"
+                          placeholderTextColor={colors.textSecondary}
+                          value={newFoodCarbs}
+                          onChangeText={setNewFoodCarbs}
+                          keyboardType="numeric"
+                          returnKeyType="done"
+                        />
+                      </View>
+                      <View style={styles.nutritionInputWrapper}>
+                        <Text
+                          style={[
+                            styles.nutritionLabel,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          Fats (g)
+                        </Text>
+                        <TextInput
+                          style={[
+                            styles.nutritionInput,
+                            {
+                              color: colors.text,
+                              borderColor: colors.border,
+                              backgroundColor: colors.background,
+                            },
+                          ]}
+                          placeholder="0"
+                          placeholderTextColor={colors.textSecondary}
+                          value={newFoodFats}
+                          onChangeText={setNewFoodFats}
+                          keyboardType="numeric"
+                          returnKeyType="done"
+                        />
+                      </View>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.addFoodButton,
+                      { backgroundColor: colors.primary },
+                    ]}
+                    onPress={addToAvailableFoods}
+                  >
+                    <Feather name="plus-circle" size={20} color="#FFFFFF" />
+                    <Text style={styles.addFoodButtonText}>
+                      Add Custom Food
                     </Text>
                   </TouchableOpacity>
-                ))}
+                </View>
               </View>
-              <TouchableOpacity
-                style={[
-                  styles.addFoodButton,
-                  { backgroundColor: colors.primary },
-                ]}
-                onPress={addToAvailableFoods}
-              >
-                <Feather name="plus" size={20} color="#FFFFFF" />
-                <Text style={styles.addFoodButtonText}>
-                  Add to Available Foods
-                </Text>
-              </TouchableOpacity>
-            </View>
 
-            {/* All Available Foods (AVAILABLE_FOODS + User Foods) */}
-            <Text style={[styles.modalSectionTitle, { color: colors.text }]}>
-              All Available Foods
-            </Text>
-            <ScrollView style={styles.availableFoodsList}>
-              {[...AVAILABLE_FOODS, ...availableFoods].length === 0 ? (
-                <Text
-                  style={[styles.emptyText, { color: colors.textSecondary }]}
-                >
-                  No foods available yet. Add some above!
-                </Text>
-              ) : (
-                [...AVAILABLE_FOODS, ...availableFoods].map((food) => (
-                  <TouchableOpacity
-                    key={food.id}
-                    style={[
-                      styles.availableFoodItem,
-                      { backgroundColor: colors.background },
-                      multiSelectMode &&
-                        isTempSelected(food.id) && {
-                          backgroundColor: colors.primary + "20",
-                          borderColor: colors.primary,
-                          borderWidth: 2,
-                        },
-                    ]}
-                    onPress={() => {
-                      if (multiSelectMode) {
-                        toggleTempSelection(food);
-                      } else {
-                        selectFromAvailableFoods(food);
-                        setShowAvailableFoodsModal(false);
-                      }
-                    }}
+              {/* All Available Foods (AVAILABLE_FOODS + User Foods) */}
+              <Text style={[styles.modalSectionTitle, { color: colors.text }]}>
+                All Available Foods
+              </Text>
+              <View style={styles.availableFoodsList}>
+                {[...AVAILABLE_FOODS, ...availableFoods].length === 0 ? (
+                  <Text
+                    style={[styles.emptyText, { color: colors.textSecondary }]}
                   >
-                    {multiSelectMode && (
-                      <View
-                        style={[
-                          styles.checkbox,
-                          { borderColor: colors.border },
+                    No foods available yet. Add some above!
+                  </Text>
+                ) : (
+                  [...AVAILABLE_FOODS, ...availableFoods].map((food) => (
+                    <TouchableOpacity
+                      key={food.id}
+                      style={[
+                        styles.availableFoodItem,
+                        { backgroundColor: colors.background },
+                        multiSelectMode &&
                           isTempSelected(food.id) && {
-                            backgroundColor: colors.primary,
+                            backgroundColor: colors.primary + "20",
                             borderColor: colors.primary,
+                            borderWidth: 2,
                           },
-                        ]}
-                      >
-                        {isTempSelected(food.id) && (
-                          <Feather name="check" size={16} color="#FFFFFF" />
-                        )}
-                      </View>
-                    )}
-                    <Text style={styles.availableFoodEmoji}>{food.emoji}</Text>
-                    <View style={styles.availableFoodInfo}>
-                      <Text
-                        style={[
-                          styles.availableFoodName,
-                          { color: colors.text },
-                        ]}
-                      >
-                        {food.name}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.availableFoodStats,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {food.calories} cal • P:{food.protein}g C:{food.carbs}g
-                        F:{food.fats}g
-                      </Text>
-                    </View>
-                    {!multiSelectMode && (
-                      <TouchableOpacity
-                        style={[
-                          styles.selectFoodButton,
-                          { backgroundColor: colors.primary },
-                        ]}
-                        onPress={() => {
+                      ]}
+                      onPress={() => {
+                        if (multiSelectMode) {
+                          toggleTempSelection(food);
+                        } else {
                           selectFromAvailableFoods(food);
                           setShowAvailableFoodsModal(false);
-                        }}
-                      >
-                        <Feather name="plus" size={16} color="#FFFFFF" />
-                      </TouchableOpacity>
-                    )}
-                    {!multiSelectMode && food.id.startsWith("user-") && (
-                      <TouchableOpacity
-                        style={[
-                          styles.removeFoodButton,
-                          { backgroundColor: colors.error },
-                        ]}
-                        onPress={() => removeFromAvailableFoods(food.id)}
-                      >
-                        <Feather name="trash-2" size={16} color="#FFFFFF" />
-                      </TouchableOpacity>
-                    )}
-                  </TouchableOpacity>
-                ))
-              )}
+                        }
+                      }}
+                    >
+                      {multiSelectMode && (
+                        <View
+                          style={[
+                            styles.checkbox,
+                            { borderColor: colors.border },
+                            isTempSelected(food.id) && {
+                              backgroundColor: colors.primary,
+                              borderColor: colors.primary,
+                            },
+                          ]}
+                        >
+                          {isTempSelected(food.id) && (
+                            <Feather name="check" size={16} color="#FFFFFF" />
+                          )}
+                        </View>
+                      )}
+                      <Text style={styles.availableFoodEmoji}>
+                        {food.emoji}
+                      </Text>
+                      <View style={styles.availableFoodInfo}>
+                        <Text
+                          style={[
+                            styles.availableFoodName,
+                            { color: colors.text },
+                          ]}
+                        >
+                          {food.name}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.availableFoodStats,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          {food.category === "breakfast"
+                            ? "🌅"
+                            : food.category === "lunch"
+                            ? "☀️"
+                            : "🌙"}{" "}
+                          {food.category.charAt(0).toUpperCase() +
+                            food.category.slice(1)}{" "}
+                          • {food.calories} cal • P:{food.protein}g C:
+                          {food.carbs}g F:{food.fats}g
+                        </Text>
+                      </View>
+                      {!multiSelectMode && (
+                        <TouchableOpacity
+                          style={[
+                            styles.selectFoodButton,
+                            { backgroundColor: colors.primary },
+                          ]}
+                          onPress={() => {
+                            selectFromAvailableFoods(food);
+                            setShowAvailableFoodsModal(false);
+                          }}
+                        >
+                          <Feather name="plus" size={16} color="#FFFFFF" />
+                        </TouchableOpacity>
+                      )}
+                      {!multiSelectMode && food.id.startsWith("user-") && (
+                        <TouchableOpacity
+                          style={[
+                            styles.removeFoodButton,
+                            { backgroundColor: colors.error },
+                          ]}
+                          onPress={() => removeFromAvailableFoods(food.id)}
+                        >
+                          <Feather name="trash-2" size={16} color="#FFFFFF" />
+                        </TouchableOpacity>
+                      )}
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
 
         {/* Multi-Select Floating Action Bar */}
         {multiSelectMode && tempSelectedFoods.length > 0 && (
@@ -1109,6 +1231,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
+  },
+  modalScrollView: {
+    flex: 1,
   },
   modalTitle: {
     fontSize: 22,
@@ -1544,5 +1669,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  addFoodDescription: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.7)",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  customFoodForm: {
+    gap: 8,
+  },
+  formGroup: {
+    marginBottom: 16,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 8,
+    color: "#FFFFFF",
+  },
+  nutritionInputWrapper: {
+    flex: 1,
+  },
+  nutritionLabel: {
+    fontSize: 12,
+    marginBottom: 6,
+    color: "rgba(255, 255, 255, 0.8)",
   },
 });

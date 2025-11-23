@@ -8,9 +8,11 @@ import {
   Switch,
   TextInput,
   Alert,
+  Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../contexts/AuthContextRN";
 import { useTheme } from "../contexts/ThemeContextRN";
 
@@ -22,9 +24,11 @@ export function SettingsScreen() {
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [username, setUsername] = useState(user?.username || "");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   useEffect(() => {
     loadSettings();
+    loadProfileImage();
     setName(user?.name || "");
     setEmail(user?.email || "");
     setUsername(user?.username || "");
@@ -33,6 +37,42 @@ export function SettingsScreen() {
   const loadSettings = async () => {
     const savedNotifications = await AsyncStorage.getItem("notifications");
     if (savedNotifications) setNotifications(JSON.parse(savedNotifications));
+  };
+
+  const loadProfileImage = async () => {
+    try {
+      const savedImage = await AsyncStorage.getItem("profileImage");
+      if (savedImage) {
+        setProfileImage(savedImage);
+      }
+    } catch (error) {
+      console.error("Failed to load profile image:", error);
+    }
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Denied",
+        "Sorry, we need camera roll permissions to change your profile picture!"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const imageUri = result.assets[0].uri;
+      setProfileImage(imageUri);
+      await AsyncStorage.setItem("profileImage", imageUri);
+    }
   };
 
   const handleThemeChange = async (newTheme: "light" | "dark" | "system") => {
@@ -111,11 +151,23 @@ export function SettingsScreen() {
         </View>
 
         <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {name.substring(0, 2).toUpperCase() || "U"}
-            </Text>
-          </View>
+          <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
+            {profileImage ? (
+              <Image
+                source={{ uri: profileImage }}
+                style={styles.avatarImage}
+              />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {name.substring(0, 2).toUpperCase() || "U"}
+                </Text>
+              </View>
+            )}
+            <View style={styles.cameraIconContainer}>
+              <Feather name="camera" size={16} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
 
           {editingProfile ? (
             <View style={styles.editForm}>
@@ -386,7 +438,28 @@ const styles = StyleSheet.create({
     backgroundColor: "#2563EB",
     justifyContent: "center",
     alignItems: "center",
+  },
+  avatarContainer: {
+    position: "relative",
     marginBottom: 16,
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  cameraIconContainer: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#2563EB",
+    borderRadius: 12,
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
   },
   avatarText: {
     fontSize: 32,
