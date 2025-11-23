@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAuth } from "../contexts/AuthContextRN";
 import { Feather } from "@expo/vector-icons";
 import * as Yup from "yup";
@@ -79,6 +80,18 @@ export function RegisterScreen({ onSwitchToLogin }: RegisterScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const handleDateChange = (event: any, date?: Date) => {
+    setShowDatePicker(Platform.OS === "ios"); // Keep open on iOS
+    if (date) {
+      setSelectedDate(date);
+      const formattedDate = date.toISOString().split("T")[0]; // YYYY-MM-DD
+      setFormData({ ...formData, dateOfBirth: formattedDate });
+      setErrors({ ...errors, dateOfBirth: undefined });
+    }
+  };
 
   const handleSubmit = async () => {
     setErrors({});
@@ -252,28 +265,42 @@ export function RegisterScreen({ onSwitchToLogin }: RegisterScreenProps) {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Date of Birth</Text>
-            <View style={styles.inputWrapper}>
+            <TouchableOpacity
+              style={styles.inputWrapper}
+              onPress={() => setShowDatePicker(true)}
+            >
               <Feather
                 name="calendar"
                 size={20}
                 color="#9CA3AF"
                 style={styles.inputIcon}
               />
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                value={formData.dateOfBirth}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, dateOfBirth: text });
-                  setErrors({ ...errors, dateOfBirth: undefined });
-                }}
-                autoCapitalize="none"
-              />
-            </View>
+              <View style={styles.dateInputContainer}>
+                <Text
+                  style={[
+                    styles.dateText,
+                    !formData.dateOfBirth && styles.placeholderText,
+                  ]}
+                >
+                  {formData.dateOfBirth || "Select your date of birth"}
+                </Text>
+              </View>
+            </TouchableOpacity>
             {errors.dateOfBirth && (
               <Text style={styles.errorMsg}>{errors.dateOfBirth}</Text>
             )}
           </View>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={selectedDate}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={handleDateChange}
+              maximumDate={new Date()}
+              minimumDate={new Date(1900, 0, 1)}
+            />
+          )}
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Confirm Password</Text>
@@ -419,6 +446,18 @@ const styles = StyleSheet.create({
     height: 48,
     fontSize: 16,
     color: "#111827",
+  },
+  dateInputContainer: {
+    flex: 1,
+    height: 48,
+    justifyContent: "center",
+  },
+  dateText: {
+    fontSize: 16,
+    color: "#111827",
+  },
+  placeholderText: {
+    color: "#9CA3AF",
   },
   eyeIcon: {
     padding: 8,
